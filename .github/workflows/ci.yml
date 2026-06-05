@@ -92,7 +92,7 @@ jobs:
           mlflow models build-docker \
             --model-uri "runs:/${RUN_ID}/model" \
             --name ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:latest \
-            --enable-mlserver
+            --env-manager local
 
       - name: Push Docker Image to Docker Hub
         run: |

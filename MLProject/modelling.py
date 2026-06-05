@@ -136,7 +136,7 @@ def main():
         run_id = mlflow.active_run().info.run_id
         print(f"[MLflow] Run ID: {run_id}")
 
-        # Simpan run_id ke file untuk Docker build
+        # Simpan ke file untuk Docker build
         with open("run_id.txt", "w") as f:
             f.write(run_id)
 

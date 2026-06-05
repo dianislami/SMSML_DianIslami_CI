@@ -7,6 +7,9 @@ on:
       - 'MLProject/**'
   workflow_dispatch:
 
+permissions:
+  contents: write 
+  
 jobs:
   train-and-deploy:
     runs-on: ubuntu-latest

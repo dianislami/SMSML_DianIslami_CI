@@ -67,7 +67,6 @@ def main():
     args = parse_args()
 
     # Setup MLflow
-    # DAGSHUB_TOKEN di-inject via GitHub Secrets saat CI
     dagshub_owner = os.environ.get("DAGSHUB_REPO_OWNER", "")
     dagshub_repo  = os.environ.get("DAGSHUB_REPO_NAME",  "")
 

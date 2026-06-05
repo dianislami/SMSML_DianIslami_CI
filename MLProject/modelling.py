@@ -93,7 +93,7 @@ def main():
     os.environ.pop("MLFLOW_RUN_ID", None)
 
     with mlflow.start_run(run_name="CI-RandomForest"):
-        # Parameters
+        # Param
         params = {
             "n_estimators":      args.n_estimators,
             "max_depth":         args.max_depth,

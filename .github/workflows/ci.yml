@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write 
-  
+  contents: write
+
 jobs:
   train-and-deploy:
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install mlflow==2.19.0 pandas numpy scikit-learn \
-                      matplotlib seaborn openpyxl dagshub joblib
+                      matplotlib seaborn openpyxl joblib
 
       # ── 4. Run MLflow Project (Training) ─────────────────────
       - name: Run MLflow Project
@@ -46,6 +46,9 @@ jobs:
             -P max_features=sqrt \
             -P data_dir=Dry_Bean_Dataset_preprocessing \
             --env-manager=local
+          # Simpan run_id ke file untuk dipakai step Docker
+          ls mlruns/0/ | grep -v meta | head -1 > run_id.txt
+          echo "Run ID saved: $(cat run_id.txt)"
 
       # ── 5. Upload Artifact ke GitHub ──────────────────────────
       - name: Upload Model Artifact
@@ -81,11 +84,16 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image via MLflow
+        env:
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
-          RUN_ID=$(ls mlruns/0/ | grep -v meta | head -1)
-          echo "Using run ID: $RUN_ID"
+          RUN_ID=$(cat run_id.txt)
+          echo "Using Run ID: $RUN_ID"
+          MODEL_URI="https://dagshub.com/${{ secrets.DAGSHUB_REPO_OWNER }}/${{ secrets.DAGSHUB_REPO_NAME }}.mlflow/runs/${RUN_ID}/artifacts/model"
+          echo "Model URI: $MODEL_URI"
           mlflow models build-docker \
-            --model-uri "mlruns/0/${RUN_ID}/artifacts/model" \
+            --model-uri "${MODEL_URI}" \
             --name ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:latest \
             --enable-mlserver
 

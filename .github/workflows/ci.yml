@@ -87,7 +87,7 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
           MLFLOW_TRACKING_URI: "https://dagshub.com/${{ secrets.DAGSHUB_REPO_OWNER }}/${{ secrets.DAGSHUB_REPO_NAME }}.mlflow"
         run: |
-          RUN_ID=$(cat run_id.txt)
+          RUN_ID=$(cat MLProject/run_id.txt)
           echo "Using Run ID: $RUN_ID"
           mlflow models build-docker \
             --model-uri "runs:/${RUN_ID}/model" \

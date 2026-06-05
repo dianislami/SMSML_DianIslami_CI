@@ -140,7 +140,7 @@ def main():
         with open("run_id.txt", "w") as f:
             f.write(run_id)
 
-    print(f"\n✅ Accuracy: {acc:.4f} | F1: {f1:.4f}")
+    print(f"\nAccuracy: {acc:.4f} | F1: {f1:.4f}")
 
 
 if __name__ == '__main__':

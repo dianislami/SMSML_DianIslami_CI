@@ -47,8 +47,6 @@ jobs:
             -P data_dir=Dry_Bean_Dataset_preprocessing \
             --env-manager=local
           # Simpan run_id ke file untuk dipakai step Docker
-          ls mlruns/0/ | grep -v meta | head -1 > run_id.txt
-          echo "Run ID saved: $(cat run_id.txt)"
 
       # ── 5. Upload Artifact ke GitHub ──────────────────────────
       - name: Upload Model Artifact

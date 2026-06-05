@@ -1,0 +1,94 @@
+name: CI — Train Model & Build Docker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'MLProject/**'
+  workflow_dispatch:
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Python ──────────────────────────────────────
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      # ── 3. Install Dependencies ───────────────────────────────
+      - name: Install Dependencies
+        run: |
+          pip install mlflow==2.19.0 pandas numpy scikit-learn \
+                      matplotlib seaborn openpyxl dagshub joblib
+
+      # ── 4. Run MLflow Project (Training) ─────────────────────
+      - name: Run MLflow Project
+        env:
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          DAGSHUB_REPO_OWNER:       ${{ secrets.DAGSHUB_REPO_OWNER }}
+          DAGSHUB_REPO_NAME:        ${{ secrets.DAGSHUB_REPO_NAME }}
+        run: |
+          mlflow run MLProject/ \
+            -P n_estimators=200 \
+            -P max_depth=20 \
+            -P min_samples_split=2 \
+            -P max_features=sqrt \
+            -P data_dir=MLProject/Dry_Bean_Dataset_preprocessing \
+            --env-manager=local
+
+      # ── 5. Upload Artifact ke GitHub ──────────────────────────
+      - name: Upload Model Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model-${{ github.run_number }}
+          path: |
+            MLProject/artifacts/
+            MLProject/confusion_matrix.png
+            MLProject/feature_importance.png
+          retention-days: 90
+
+      # ── 6. Commit artifacts ke repo ───────────────────────────
+      - name: Commit Artifacts to Repo
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p saved_artifacts/run-${{ github.run_number }}
+          cp -r MLProject/artifacts/* saved_artifacts/run-${{ github.run_number }}/ 2>/dev/null || true
+          cp MLProject/confusion_matrix.png saved_artifacts/run-${{ github.run_number }}/ 2>/dev/null || true
+          cp MLProject/feature_importance.png saved_artifacts/run-${{ github.run_number }}/ 2>/dev/null || true
+          git add saved_artifacts/
+          git diff --cached --quiet || git commit -m "ci: save artifacts run #${{ github.run_number }} [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 7. Build & Push Docker Image (Advanced) ───────────────
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image via MLflow
+        run: |
+          RUN_ID=$(ls mlruns/0/ | grep -v meta | head -1)
+          echo "Using run ID: $RUN_ID"
+          mlflow models build-docker \
+            --model-uri "mlruns/0/${RUN_ID}/artifacts/model" \
+            --name ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:latest \
+            --enable-mlserver
+
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:latest
+          docker tag  ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:latest \
+                      ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:run-${{ github.run_number }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/dry-bean-model:run-${{ github.run_number }}

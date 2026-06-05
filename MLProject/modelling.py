@@ -90,6 +90,8 @@ def main():
     y_test   = test_df["Class"]
     print(f"[Data] Train: {X_train.shape} | Test: {X_test.shape}")
 
+    os.environ.pop("MLFLOW_RUN_ID", None)
+
     with mlflow.start_run(run_name="CI-RandomForest"):
         # Params
         params = {

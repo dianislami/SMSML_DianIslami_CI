@@ -10,10 +10,4 @@ entry_points:
       min_samples_split: {type: int, default: 2}
       max_features:    {type: str,   default: "sqrt"}
       data_dir:        {type: str,   default: "Dry_Bean_Dataset_preprocessing"}
-    command: >-
-      python modelling.py
-        --n_estimators {n_estimators}
-        --max_depth {max_depth}
-        --min_samples_split {min_samples_split}
-        --max_features {max_features}
-        --data_dir {data_dir}
+    command: "python modelling.py --n_estimators {n_estimators} --max_depth {max_depth} --min_samples_split {min_samples_split} --max_features {max_features} --data_dir {data_dir}"

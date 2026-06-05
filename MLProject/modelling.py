@@ -71,8 +71,9 @@ def main():
     dagshub_repo  = os.environ.get("DAGSHUB_REPO_NAME",  "")
 
     if dagshub_owner and dagshub_repo:
-        import dagshub
-        dagshub.init(repo_owner=dagshub_owner, repo_name=dagshub_repo, mlflow=True)
+        mlflow.set_tracking_uri(
+            f"https://dagshub.com/{dagshub_owner}/{dagshub_repo}.mlflow"
+        )
         print(f"[MLflow] Tracking ke DagsHub: {dagshub_owner}/{dagshub_repo}")
     else:
         mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"))

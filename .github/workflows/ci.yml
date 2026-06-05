@@ -41,7 +41,7 @@ jobs:
             -P max_depth=20 \
             -P min_samples_split=2 \
             -P max_features=sqrt \
-            -P data_dir=MLProject/Dry_Bean_Dataset_preprocessing \
+            -P data_dir=Dry_Bean_Dataset_preprocessing \
             --env-manager=local
 
       # ── 5. Upload Artifact ke GitHub ──────────────────────────
